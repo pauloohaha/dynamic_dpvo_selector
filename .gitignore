@@ -1,0 +1,6 @@
+test_processed_data/*
+plot/*
+
+dataloader/__pycache__/
+model/__pycache__/
+utils/__pycache__/

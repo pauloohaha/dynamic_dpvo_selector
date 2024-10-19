@@ -14,7 +14,7 @@ import numpy as np
 
 
 class ConfidenceToDifficultyModel(nn.Module):
-    def __init__(self,seq_len = 100, input_dim=3, d_model=64, nhead=8, num_layers=90, dim_feedforward=128):
+    def __init__(self,seq_len = 100, input_dim=3, d_model=64, nhead=8, num_layers=15, dim_feedforward=128):
         super(ConfidenceToDifficultyModel, self).__init__()
 
         # Transformer encoder layers

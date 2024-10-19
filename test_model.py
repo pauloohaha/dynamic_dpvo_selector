@@ -17,7 +17,7 @@ from model.model_backbone import ConfidenceToDifficultyModel
 from dataloader.data import ConfidenceDataset
 from utils.preprocess import aglin_and_preprocess_log_data
 
-load_test_data = 1
+
 
 euroc_scenes = [
     "MH_01_easy",
@@ -34,9 +34,13 @@ euroc_scenes = [
 ]
 
 dynamic_log_path = '/pool0/piaodeng/distributed_dpvo/dynamic_slam_log/logs/'
-model_path = "confidence_to_difficulty_model.pth"
+model_path = "confidence_to_difficulty_model_new.pth0"
 
-def test_model():
+def test_model(newest_model = None):
+      
+      if newest_model != None:
+         model_path = newest_model
+
       for scene_name in euroc_scenes:
         print(scene_name)
         for num_patches in range(96, 90, -16):
@@ -57,7 +61,7 @@ def test_model():
                     dynamic_log_picke_file = open(current_input_log, 'rb')
                     logged_data = pickle.load(dynamic_log_picke_file)
 
-                    confidence_data_1_test,  difficulty_labels_1_test= aglin_and_preprocess_log_data(logged_data, num_patches, num_frame)
+                    confidence_data_1_test,  difficulty_labels_1_test= aglin_and_preprocess_log_data(logged_data)
 
                     confidence_data = torch.tensor(confidence_data_1_test, dtype=torch.float32)
                     difficulty_labels = torch.tensor(difficulty_labels_1_test, dtype=torch.float32)
@@ -68,7 +72,7 @@ def test_model():
                 dataset = ConfidenceDataset(confidence_data, difficulty_labels)
                 data_loader = DataLoader(dataset, 30, shuffle=False)
 
-                model = ConfidenceToDifficultyModel(num_layers=15).to('cuda')# Initialize the model
+                model = ConfidenceToDifficultyModel().to('cuda')# Initialize the model
                 model.load_state_dict(torch.load(model_path))
                 model.eval()
 
@@ -96,17 +100,22 @@ def test_model():
                 ax1.plot(tstamp, all_predictions, 'c-', label='prediction')
                 ax1.set_ylabel('prediction', color='c')
                 ax1.set_xlabel('time stamp')
+                ax1.set_ylim(0, 0.08)
                 ax1.tick_params(axis='y', labelcolor='c')
 
                 ax3 = ax1.twinx()
                 ax3.plot(tstamp, all_targets, 'b-', label='ground truth')
                 ax3.set_ylabel('ground truth', color='b')
+                ax3.set_ylim(0, 0.08)
                 ax3.tick_params(axis='y', labelcolor='b')
 
                 plt.title(scene_name+' '+str(num_patches)+"patches " + str(num_frame) + 'frames ' + str(trails_idx) + 'trail' )
 
                 output_folder = "plot/dynamic_slam_prediction_"+scene_name+"_"+str(num_patches)+"_patches_"+str(num_frame)+"_frames_trail_"+str(trails_idx)+"/"
                 os.makedirs(output_folder, exist_ok=True)
+
+                if os.path.exists(output_folder+"100_input.png"):
+                  os.remove(output_folder+"100_input.png")
 
                 plt.savefig(output_folder+"100_input.png", dpi=100, bbox_inches='tight')
                 plt.close('all')
@@ -116,4 +125,4 @@ def test_model():
     # Save the model's state dictionary
 
 if __name__ == '__main__':
-  test_model()
+  test_model(model_path)

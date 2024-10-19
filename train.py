@@ -14,6 +14,7 @@ from model.model_backbone import ConfidenceToDifficultyModel
 from dataloader.data import ConfidenceDataset
 from utils.preprocess import aglin_and_preprocess_log_data
 from test_model import test_model
+import os
 
 load_input_label = 0
 
@@ -53,17 +54,26 @@ def train():
                 dynamic_log_picke_file = open(current_input_log, 'rb')
                 logged_data = pickle.load(dynamic_log_picke_file)
 
-                confidence_data_1_test,  difficulty_labels_1_test= aglin_and_preprocess_log_data(logged_data, num_patches, num_frame)
+                confidence_data_1_test,  difficulty_labels_1_test= aglin_and_preprocess_log_data(logged_data)
 
                 confidence_data = torch.cat((confidence_data, torch.tensor(confidence_data_1_test, dtype=torch.float32)), dim=0)
                 difficulty_labels = torch.cat((difficulty_labels, torch.tensor(difficulty_labels_1_test, dtype=torch.float32)), dim=0)
 
-      torch.save(confidence_data, '../confidence_data_train.pth')
-      torch.save(difficulty_labels, '../difficulty_labels_train.pth')
+      if os.path.exists('./confidence_data_train.pth'):
+          os.remove('./confidence_data_train.pth')
+      
+      if os.path.exists('./difficulty_labels_train.pth'):
+          os.remove('./difficulty_labels_train.pth')
+
+      torch.save(confidence_data, './confidence_data_train.pth')
+      torch.save(difficulty_labels, './difficulty_labels_train.pth')
     else:
       #bypass the data preparation
-      confidence_data = torch.load("../confidence_data_train.pth")
-      difficulty_labels = torch.load("../difficulty_labels_train.pth")
+      confidence_data = torch.load("./confidence_data_train.pth")
+      difficulty_labels = torch.load("./difficulty_labels_train.pth")
+
+
+
 
     confidence_data = confidence_data
     dataset = ConfidenceDataset(confidence_data, difficulty_labels)
@@ -71,15 +81,15 @@ def train():
 
     criterion = nn.MSELoss()
 
-    model = ConfidenceToDifficultyModel(num_layers=15).to('cuda')# Initialize the model
-    model.load_state_dict(torch.load(model_path))
+    model = ConfidenceToDifficultyModel().to('cuda')# Initialize the model
+    #model.load_state_dict(torch.load(model_path))
     optimizer = torch.optim.Adam(model.parameters(), lr=5e-4)
 
     # Training loop
-    num_epochs = 999999
+    num_epochs = 99
     model.train()  # Set the model to training mode
 
-    for epoch in range(num_epochs):
+    for epoch in range(0, num_epochs):
         running_loss = 0.0
         progress_bar = tqdm(data_loader, desc=f"Epoch {epoch+1}")
         for i, (inputs, targets) in enumerate(progress_bar):
@@ -108,10 +118,10 @@ def train():
         # Print average loss per epoch
         print(f'Epoch {epoch+1}/{num_epochs}, Loss: {running_loss/len(data_loader)}')
 
-        if epoch % 10 == 9:
             # Save the model's state dictionary
-            torch.save(model.state_dict(), new_model_path)
-            test_model()
+        if epoch % 5 == 0:
+          torch.save(model.state_dict(), new_model_path+str(epoch))
+          test_model(newest_model = new_model_path+str(epoch))
     
     wandb.finish()
 

@@ -34,7 +34,7 @@ euroc_scenes = [
 ]
 
 dynamic_log_path = '/pool0/piaodeng/distributed_dpvo/dynamic_slam_log/logs/'
-model_path = "confidence_to_difficulty_model_new.pth0"
+model_path = "confidence_to_difficulty_model_new.pth70"
 
 def test_model(newest_model = None):
       
@@ -97,16 +97,19 @@ def test_model(newest_model = None):
 
                 fig, (ax1) = plt.subplots(figsize=(40, 28))
 
+                min_plot = min(min(all_predictions), min(all_targets))
+                max_plot = max(max(all_predictions), max(all_targets))
+
                 ax1.plot(tstamp, all_predictions, 'c-', label='prediction')
                 ax1.set_ylabel('prediction', color='c')
                 ax1.set_xlabel('time stamp')
-                ax1.set_ylim(0, 0.08)
+                ax1.set_ylim(min_plot, max_plot)
                 ax1.tick_params(axis='y', labelcolor='c')
 
                 ax3 = ax1.twinx()
                 ax3.plot(tstamp, all_targets, 'b-', label='ground truth')
                 ax3.set_ylabel('ground truth', color='b')
-                ax3.set_ylim(0, 0.08)
+                ax3.set_ylim(min_plot, max_plot)
                 ax3.tick_params(axis='y', labelcolor='b')
 
                 plt.title(scene_name+' '+str(num_patches)+"patches " + str(num_frame) + 'frames ' + str(trails_idx) + 'trail' )

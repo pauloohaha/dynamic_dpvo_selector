@@ -19,27 +19,29 @@ import os
 load_input_label = 0
 
 # Define the path where you want to save the model
-model_path = "confidence_to_difficulty_model.pth"
+model_path = "confidence_to_difficulty_model_new.pth40"
 new_model_path = 'confidence_to_difficulty_model_new.pth'
 
 euroc_scenes = [
-    "MH_01_easy",
-    "MH_02_easy",
-    "MH_03_medium",
-    "MH_04_difficult",
+    "V2_02_medium",
     "MH_05_difficult",
     "V1_01_easy",
     "V1_02_medium",
     "V1_03_difficult",
     "V2_01_easy",
-    "V2_02_medium",
     "V2_03_difficult",
+    "MH_01_easy",
+    "MH_02_easy",
+    "MH_03_medium",
+    "MH_04_difficult",
 ]
 
 dynamic_log_path = '/pool0/piaodeng/distributed_dpvo/dynamic_slam_log/logs/'
 
 
 def train():
+    
+    data_len = 0
     wandb.init(project="confidence-to-difficulty")
     if load_input_label == 0:
       confidence_data = torch.tensor([])
@@ -55,9 +57,12 @@ def train():
                 logged_data = pickle.load(dynamic_log_picke_file)
 
                 confidence_data_1_test,  difficulty_labels_1_test= aglin_and_preprocess_log_data(logged_data)
-
+                current_len = len(confidence_data_1_test)
+                data_len = data_len + current_len
                 confidence_data = torch.cat((confidence_data, torch.tensor(confidence_data_1_test, dtype=torch.float32)), dim=0)
                 difficulty_labels = torch.cat((difficulty_labels, torch.tensor(difficulty_labels_1_test, dtype=torch.float32)), dim=0)
+
+                print("confidence tebnsor: " + str(confidence_data.shape[0])+" label tensor: " + str(difficulty_labels.shape[0]) + " counter: " + str(data_len))
 
       if os.path.exists('./confidence_data_train.pth'):
           os.remove('./confidence_data_train.pth')
@@ -73,11 +78,16 @@ def train():
       difficulty_labels = torch.load("./difficulty_labels_train.pth")
 
 
-
+    print("confidence max: " + str(torch.max(confidence_data[:, :, 0])))
+    print("translation max: " + str(torch.max(confidence_data[:, :, 1])))
+    print("rotation max: " + str(torch.max(confidence_data[:, :, 2])))
+    print("distance max: " + str(torch.max(confidence_data[:, :, 3])))
+    print("delta max: " + str(torch.max(confidence_data[:, :, 4])))
+    print("label max: " + str(torch.max(difficulty_labels)))
 
     confidence_data = confidence_data
     dataset = ConfidenceDataset(confidence_data, difficulty_labels)
-    data_loader = DataLoader(dataset, 30, shuffle=True)
+    data_loader = DataLoader(dataset, 1500, shuffle=True)
 
     criterion = nn.MSELoss()
 

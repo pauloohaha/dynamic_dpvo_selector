@@ -51,6 +51,10 @@ def aglin_and_preprocess_log_data(logged_data,):
       for start_idx in range(0, len(error_tstamp)):
         if tstamp[0] == error_tstamp[start_idx]:
           error_tstamp = error_tstamp[start_idx:]
+          est_xyz      = est_xyz[start_idx:]
+          ref_xyz      = ref_xyz[start_idx:]
+          est_pose     = est_pose[start_idx:]
+          distance_f_S = distance_f_S[start_idx:]
           break
 
     if tstamp[-1] > error_tstamp[-1]:
@@ -67,6 +71,10 @@ def aglin_and_preprocess_log_data(logged_data,):
       for end_idx in range(len(error_tstamp) - 1, 0 ,-1):
         if tstamp[-1] == error_tstamp[end_idx]:
           error_tstamp = error_tstamp[:end_idx+1]
+          est_xyz      = est_xyz[:end_idx+1]
+          ref_xyz      = ref_xyz[:end_idx+1]
+          est_pose     = est_pose[:end_idx+1]
+          distance_f_S = distance_f_S[:end_idx+1]
           break
 
     #compute the distance traveled in the past 100 frames
@@ -160,37 +168,37 @@ def aglin_and_preprocess_log_data(logged_data,):
     confidence_scale_factor       = 800
     rotation_scale_factor         = 0.5
     smoothed_drift_scale_facotr   = 0.02
-    # distance_100_frame_factor     = 20
-    # delta_scale_factor            = 25
+    distance_100_frame_factor     = 18
+    delta_scale_factor            = 30
 
 
     confidence          = [x / confidence_scale_factor for x in confidence]
     rotation_log        = [x / rotation_scale_factor for x in rotation_log]
     translation_log     = [x / translation_scale_factor for x in translation_log]
     smoothed_drift      = [x / smoothed_drift_scale_facotr for x in smoothed_drift]
-    # distance_100_frame  = [x / distance_100_frame_factor for x in distance_100_frame]
-    # delta               = [x / delta_scale_factor for x in delta]
+    distance_100_frame  = [x / distance_100_frame_factor for x in distance_100_frame]
+    delta               = [x / delta_scale_factor for x in delta]
 
     #clip
-    confidence          = [min(x, 1) for x in confidence]
-    rotation_log        = [min(x, 1) for x in rotation_log]
-    translation_log     = [min(x, 1) for x in translation_log]
-    smoothed_drift      = [min(x, 1) for x in smoothed_drift]
+    # confidence          = [min(x, 1) for x in confidence]
+    # rotation_log        = [min(x, 1) for x in rotation_log]
+    # translation_log     = [min(x, 1) for x in translation_log]
+    smoothed_drift      = [min(x, 3) for x in smoothed_drift]
     # distance_100_frame  = [min(x, 1) for x in distance_100_frame]
     # delta               = [min(x, 1) for x in delta]
 
     #rearrange the data
     history_window = 100 #give history_window len of past data
     #                                   frame,        ,  history window,  confidence+translation+rotation+last 100 frame distance+delta
-    model_input_data = np.zeros([len(confidence)-history_window, history_window,            3], dtype=float) # skip the first 100 frame for complete data
+    model_input_data = np.zeros([len(confidence)-history_window, history_window,            5], dtype=float) # skip the first 100 frame for complete data
 
     for frame_idx in range(history_window, len(confidence)):
        for histroy_idx in range(0, history_window):
          history_frame_pointer = frame_idx - histroy_idx - 1
          if (history_frame_pointer <0 ):
            break
-         model_input_data[frame_idx-history_window, histroy_idx] = [confidence[history_frame_pointer], translation_log[history_frame_pointer], rotation_log[history_frame_pointer]]
-         #model_input_data[frame_idx-history_window, histroy_idx] = [confidence[history_frame_pointer], translation_log[history_frame_pointer], rotation_log[history_frame_pointer], distance_100_frame[history_frame_pointer], delta[history_frame_pointer]]
+         #model_input_data[frame_idx-history_window, histroy_idx] = [confidence[history_frame_pointer], translation_log[history_frame_pointer], rotation_log[history_frame_pointer]]
+         model_input_data[frame_idx-history_window, histroy_idx] = [confidence[history_frame_pointer], translation_log[history_frame_pointer], rotation_log[history_frame_pointer], distance_100_frame[history_frame_pointer], delta[history_frame_pointer]]
 
 
     label = smoothed_drift[history_window:]

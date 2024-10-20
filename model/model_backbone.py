@@ -14,7 +14,7 @@ import numpy as np
 
 
 class ConfidenceToDifficultyModel(nn.Module):
-    def __init__(self,seq_len = 100, input_dim=3, d_model=64, nhead=8, num_layers=15, dim_feedforward=128):
+    def __init__(self,seq_len = 100, input_dim=5, d_model=64, nhead=8, num_layers=15, dim_feedforward=128):
         super(ConfidenceToDifficultyModel, self).__init__()
 
         # Transformer encoder layers
@@ -32,6 +32,7 @@ class ConfidenceToDifficultyModel(nn.Module):
         self.embedding = nn.Linear(input_dim, d_model)
 
         self.pooling_layer = nn.Linear(seq_len, 1)
+        
 
     def forward(self, x):
         # x: input confidence scores (batch_size, sequence_length, input_dim)

@@ -190,15 +190,15 @@ def aglin_and_preprocess_log_data(logged_data,):
     #rearrange the data
     history_window = 100 #give history_window len of past data
     #                                   frame,        ,  history window,  confidence+translation+rotation+last 100 frame distance+delta
-    model_input_data = np.zeros([len(confidence)-history_window, history_window,            5], dtype=float) # skip the first 100 frame for complete data
+    model_input_data = np.zeros([len(confidence)-history_window, history_window,            3], dtype=float) # skip the first 100 frame for complete data
 
     for frame_idx in range(history_window, len(confidence)):
        for histroy_idx in range(0, history_window):
          history_frame_pointer = frame_idx - histroy_idx - 1
          if (history_frame_pointer <0 ):
            break
-         #model_input_data[frame_idx-history_window, histroy_idx] = [confidence[history_frame_pointer], translation_log[history_frame_pointer], rotation_log[history_frame_pointer]]
-         model_input_data[frame_idx-history_window, histroy_idx] = [confidence[history_frame_pointer], translation_log[history_frame_pointer], rotation_log[history_frame_pointer], distance_100_frame[history_frame_pointer], delta[history_frame_pointer]]
+         model_input_data[frame_idx-history_window, histroy_idx] = [confidence[history_frame_pointer], translation_log[history_frame_pointer], rotation_log[history_frame_pointer]]
+         #model_input_data[frame_idx-history_window, histroy_idx] = [confidence[history_frame_pointer], translation_log[history_frame_pointer], rotation_log[history_frame_pointer], distance_100_frame[history_frame_pointer], delta[history_frame_pointer]]
 
 
     label = smoothed_drift[history_window:]

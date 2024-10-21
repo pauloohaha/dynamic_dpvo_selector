@@ -16,7 +16,7 @@ from utils.preprocess import aglin_and_preprocess_log_data
 from test_model import test_model
 import os
 
-load_input_label = 0
+load_input_label = 1
 
 # Define the path where you want to save the model
 model_path = "confidence_to_difficulty_model_new.pth40"
@@ -30,7 +30,7 @@ euroc_scenes = [
     "V1_03_difficult",
     "V2_01_easy",
     "V2_03_difficult",
-    "MH_01_easy",
+    #"MH_01_easy",
     "MH_02_easy",
     "MH_03_medium",
     "MH_04_difficult",
@@ -81,8 +81,8 @@ def train():
     print("confidence max: " + str(torch.max(confidence_data[:, :, 0])))
     print("translation max: " + str(torch.max(confidence_data[:, :, 1])))
     print("rotation max: " + str(torch.max(confidence_data[:, :, 2])))
-    print("distance max: " + str(torch.max(confidence_data[:, :, 3])))
-    print("delta max: " + str(torch.max(confidence_data[:, :, 4])))
+    # print("distance max: " + str(torch.max(confidence_data[:, :, 3])))
+    # print("delta max: " + str(torch.max(confidence_data[:, :, 4])))
     print("label max: " + str(torch.max(difficulty_labels)))
 
     confidence_data = confidence_data

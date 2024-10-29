@@ -19,6 +19,7 @@ from utils.preprocess import aglin_and_preprocess_log_data
 import pandas as pd
 
 
+
 euroc_scenes = [
     "MH_01_easy",
     "MH_02_easy",
@@ -406,12 +407,17 @@ tartan_scenes = [
   # "westerndesert/westerndesert/Hard/P007"
 ]
 
+plot_patch_select = 1
+
 dynamic_log_path = '/pool0/piaodeng/adaptive_DPVO/dynamic_slam_log/logs/'
 #dynamic_log_path = '/pool0/piaodeng/dynamic_dpvo_selector/data_log/'
 
-model_path = "trained_weights/confidence_to_difficulty_model_fixed_agline_all_works.pth"
+model_path = "trained_weights/confidence_to_difficulty_model_full_tartan.pth"
 
 data_set_path = '/pool0/piaodeng/DROID-SLAM/datasets/EuRoC/'
+
+min_thres = 0.3
+max_thres = 0.7
 
 def test_model(newest_model = None):
       
@@ -474,24 +480,66 @@ def test_model(newest_model = None):
                 all_targets.extend(targets.cpu().numpy())
 
           print(f'eva Loss: {eva_loss/len(data_loader)}')
+
+
+          fig, (ax1) = plt.subplots(figsize=(40, 28))
+
+          if plot_patch_select == 1:
+            target_selected_config = []
+            predic_selected_config = []
+            
+
+            for i in range(len(all_predictions)):
+              if i < 30:
+                  continue
+              
+              #smooth and scalling
+              max_target_diffc = max(all_targets[i - 30:i]).item()
+              max_predic_diffc = max(all_predictions[i - 30:i]).item()
+
+              if max_target_diffc > max_thres:
+                  adaptive_num_patch = 96
+              elif max_target_diffc < min_thres:
+                  adaptive_num_patch = 16
+              else:
+                  adaptive_num_patch = int(5*(max_target_diffc - min_thres)/(max_thres - min_thres)) * 16 + 16
+
+              target_selected_config.append(adaptive_num_patch)
+
+              if max_predic_diffc > max_thres:
+                  adaptive_num_patch = 96
+              elif max_predic_diffc < min_thres:
+                  adaptive_num_patch = 16
+              else:
+                  adaptive_num_patch = int(5*(max_predic_diffc - min_thres)/(max_thres - min_thres)) * 16 + 16
+
+              predic_selected_config.append(adaptive_num_patch)
+
+            
+            all_predictions = predic_selected_config
+            all_targets     = target_selected_config
+
+            min_plot = 0
+            max_plot = 100
+             
+          else:
+            min_plot = min(min(all_predictions), min(all_targets))
+            max_plot = max(max(all_predictions), max(all_targets))
+
+
+
           tstamp = []
 
           for i in range(0, len(all_predictions)):
             tstamp.append(i)
 
-          fig, (ax1) = plt.subplots(figsize=(40, 28))
 
-          min_plot = min(min(all_predictions), min(all_targets))
-          max_plot = max(max(all_predictions), max(all_targets))
 
-          #min_plot = 0
-          #max_plot = 1
-
-          ax1.plot(tstamp, all_predictions, 'c-', label='prediction')
-          ax1.set_ylabel('prediction', color='c')
+          ax1.plot(tstamp, all_predictions, 'r', label='prediction',linewidth=7)
+          ax1.set_ylabel('prediction', color='r')
           ax1.set_xlabel('time stamp')
           ax1.set_ylim(min_plot, max_plot)
-          ax1.tick_params(axis='y', labelcolor='c')
+          ax1.tick_params(axis='y', labelcolor='r')
 
           ax3 = ax1.twinx()
           ax3.plot(tstamp, all_targets, 'b-', label='ground truth')

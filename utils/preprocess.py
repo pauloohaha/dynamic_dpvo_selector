@@ -341,7 +341,7 @@ def aglin_and_preprocess_log_data(logged_data, imu_data):
 
     #est_translation_scale         = 1 / translation_real_sacle
     est_acc_scale_factor          = 1
-    translation_scale_factor      = 0.5
+    translation_scale_factor      = 0.8
     confidence_scale_factor       = 800
     rotation_scale_factor         = 0.5
 
